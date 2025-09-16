@@ -3,4 +3,4 @@ This isn’t your polished, picture-perfect movie palace. Aura Cinema is where t
 
 Here, it’s about the experience—raw, dirty, and in your face. No fake glamour, no overpriced fluff—just you, the screen, and a world that’ll mess with your head. Come for the films, stay for the vibe.
 
-Aura Cinema: Because the clean version is boring.
+Filmora: Because the clean version is boring.
