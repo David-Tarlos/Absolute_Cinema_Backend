@@ -46,4 +46,15 @@ public class TmdbMovieResponse {
     private List<Long> genreIds;
 
     private List<TmdbGenreResponse> genres;
+
+    private Boolean adult;
+
+    @JsonProperty("production_companies")
+    private List<TmdbProductionCompanyResponse> productionCompanies;
+
+    private TmdbVideosWrapper videos;
+
+    private TmdbKeywordsWrapper keywords;
+
+    private TmdbCreditsResponse credits;
 }
