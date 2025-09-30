@@ -40,6 +40,8 @@ public class TmdbClientService {
                             .queryParam("api_key", apiKey)
                             .queryParam("page", page)
                             .queryParam("language", "en-US")
+                            .queryParam("include_adult", false)
+                            .queryParam("region", "US")
                             .build())
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<TmdbPageResponse<TmdbMovieResponse>>() {})
@@ -64,22 +66,43 @@ public class TmdbClientService {
     public TmdbMovieResponse getMovieDetails(Long movieId) {
         log.info("Fetching movie details for ID: {}", movieId);
 
-        try {
-            return webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/movie/{movieId}")
-                            .queryParam("api_key", apiKey)
-                            .queryParam("language", "en-US")
-                            .build(movieId))
-                    .retrieve()
-                    .bodyToMono(TmdbMovieResponse.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .block();
+        int maxRetries = 3;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                TmdbMovieResponse response = webClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/movie/{movieId}")
+                                .queryParam("api_key", apiKey)
+                                .queryParam("language", "en-US")
+                                .queryParam("append_to_response", "videos,keywords,credits")
+                                .build(movieId))
+                        .retrieve()
+                        .bodyToMono(TmdbMovieResponse.class)
+                        .timeout(Duration.ofSeconds(15))
+                        .block();
 
-        } catch (Exception e) {
-            log.error("Error fetching movie details for ID {}: {}", movieId, e.getMessage());
-            return null;
+                if (response != null) {
+                    return response;
+                }
+
+            } catch (Exception e) {
+                log.warn("Attempt {}/{} failed for movie ID {}: {}",
+                        attempt, maxRetries, movieId, e.getMessage());
+
+                if (attempt < maxRetries) {
+                    try {
+                        Thread.sleep(1000 * attempt); // Exponential backoff
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    log.error("All attempts failed for movie ID {}: {}", movieId, e.getMessage());
+                }
+            }
         }
+
+        return null;
     }
 
     public List<TmdbGenreResponse> getGenres() {
